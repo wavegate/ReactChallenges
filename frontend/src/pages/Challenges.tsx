@@ -3,6 +3,9 @@ import Challenge from "../components/Challenge";
 import useFetch from "../hooks/useFetch";
 import { Dialog, Listbox } from "@headlessui/react";
 import { Controller, useController, useForm } from "react-hook-form";
+import MyEditor from "../components/MyEditor";
+import { convertToRaw, Editor, EditorState } from "draft-js";
+import "draft-js/dist/Draft.css";
 
 export type ChallengeType = {
   name: string;
@@ -37,7 +40,13 @@ const Challenges = () => {
     watch,
     control,
     formState: { errors },
-  } = useForm();
+  } = useForm({
+    defaultValues: {
+      name: "Simple Form",
+      rank: "Bronze",
+      requirements: EditorState.createEmpty(),
+    },
+  });
 
   const ranks = [
     "Bronze",
@@ -50,6 +59,9 @@ const Challenges = () => {
   ];
 
   const onSubmit = (data: any) => {
+    const currentContent = data.requirements.getCurrentContent();
+    const content = JSON.stringify(convertToRaw(currentContent));
+    console.log(content);
     console.log(data);
   };
 
@@ -93,35 +105,40 @@ const Challenges = () => {
         <div className="fixed inset-0 flex items-center justify-center p-4">
           <Dialog.Panel className="mx-auto max-w-sm rounded bg-white">
             <Dialog.Title>Create challenge</Dialog.Title>
-            <Dialog.Description>
-              <form onSubmit={handleSubmit(onSubmit)}>
-                <label htmlFor="name">Name</label>
-                <input type="text" {...register("name")} />
-                <Controller
-                  control={control}
-                  name="rank"
-                  defaultValue={ranks[0]}
-                  render={({ field: { value, onChange } }) => {
-                    return (
-                      <Listbox value={value} onChange={onChange}>
-                        <Listbox.Label>Rank:</Listbox.Label>
-                        <Listbox.Button>{value}</Listbox.Button>
-                        <Listbox.Options>
-                          {ranks.map((rank, rankIndex) => (
-                            <Listbox.Option key={rankIndex} value={rank}>
-                              {rank}
-                            </Listbox.Option>
-                          ))}
-                        </Listbox.Options>
-                      </Listbox>
-                    );
-                  }}
-                />
-              </form>
-            </Dialog.Description>
 
-            <button onClick={() => setIsOpen(false)}>Deactivate</button>
-            <button onClick={() => setIsOpen(false)}>Cancel</button>
+            <form onSubmit={handleSubmit(onSubmit)}>
+              <label htmlFor="name">Name</label>
+              <input type="text" {...register("name")} />
+              <Controller
+                control={control}
+                name="rank"
+                defaultValue={ranks[0]}
+                render={({ field: { value, onChange } }) => {
+                  return (
+                    <Listbox value={value} onChange={onChange}>
+                      <Listbox.Label>Rank:</Listbox.Label>
+                      <Listbox.Button>{value}</Listbox.Button>
+                      <Listbox.Options>
+                        {ranks.map((rank, rankIndex) => (
+                          <Listbox.Option key={rankIndex} value={rank}>
+                            {rank}
+                          </Listbox.Option>
+                        ))}
+                      </Listbox.Options>
+                    </Listbox>
+                  );
+                }}
+              />
+              <Controller
+                control={control}
+                name="requirements"
+                render={({ field: { value, onChange } }) => {
+                  return <Editor editorState={value} onChange={onChange} />;
+                }}
+              />
+              <button type="submit">Submit</button>
+              <button onClick={() => setIsOpen(false)}>Cancel</button>
+            </form>
           </Dialog.Panel>
         </div>
       </Dialog>
